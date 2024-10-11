@@ -6,6 +6,9 @@ module.exports = function (app) {
     app.use(express.json()); // For parsing application/json
     app.use(express.urlencoded({ extended: false })); // For parsing application/x-www-form-urlencoded
 
+
+// // TOURS // //
+
     // Get all tours
     app.get("/tours", function (req, res) {
         let sql = "SELECT * FROM tours";
@@ -61,6 +64,20 @@ module.exports = function (app) {
             } else {
                 res.send({ message: "Tour deleted successfully" });
             }
+        });
+    });
+
+// // MUSIC // //
+
+    // Get all music entries
+    app.get("/music", function (req, res) {
+        let sql = "SELECT * FROM music";
+        conn.query(sql, function (err, rows) {
+        if (err) {
+            res.status(500).send("Error retrieving data");
+        } else {
+            res.send(rows);
+        }
         });
     });
 };
