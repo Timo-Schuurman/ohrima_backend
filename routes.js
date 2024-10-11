@@ -80,4 +80,18 @@ module.exports = function (app) {
         }
         });
     });
+
+    // Delete a music entry (DELETE)
+    app.delete("/music/:id", function (req, res) {
+        let sql = "DELETE FROM music WHERE id = ?";
+        conn.query(sql, [req.params.id], function (err, result) {
+        if (err) {
+            res.status(500).send("Error deleting data");
+        } else if (result.affectedRows === 0) {
+            res.status(404).send("Music entry not found");
+        } else {
+            res.send({ message: "Music entry deleted successfully" });
+        }
+        });
+    });
 };
