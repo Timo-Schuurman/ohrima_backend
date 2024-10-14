@@ -23,17 +23,19 @@ module.exports = function (app) {
 
     // Create a new tour (INSERT)
     app.post("/tours", function (req, res) {
-        console.log("req.body:", req.body); // Log the received request body
-
+        console.log("req.bodytje:", req.body); // Log the received request body
+        let obj1 = req.body[0]
+        var arr1 = Object.keys(obj1).map((key) => [obj1[key]]);
+        console.log("arr1=", arr1)
         let sql = `INSERT INTO tours (event_name, event_date, location, ticket) VALUES (?, ?, ?, ?)`;
-
-        conn.query(sql, [req.body.event_name, req.body.event_date, req.body.location, req.body.ticket], function (err, result) {
+        conn.query(sql, arr1, function (err, result) {
             if (err) {
                 console.error(err); // Log error for better debugging
+
                 res.status(500).send("Error adding the tour");
             } else {
-                console.log("Insert ID:", result.insertId);
-                res.send("Tour succesvol toegevoegd!");
+                console.log("Insert IDtje:", result.insertId)
+                res.send("Tour succesvol toegevoegd!")
             }
         });
     });
@@ -78,6 +80,25 @@ module.exports = function (app) {
         } else {
             res.send(rows);
         }
+        });
+    });
+
+    // Create a new music (INSERT)
+    app.post("/music", function (req, res) {
+        console.log("req.bodytje:", req.body); // Log the received request body
+        let obj1 = req.body[0]
+        var arr1 = Object.keys(obj1).map((key) => [obj1[key]]);
+        console.log("arr1=", arr1)
+        let sql = `INSERT INTO tours (name, music_path) VALUES (?, ?, ?, ?)`;
+        conn.query(sql, arr1, function (err, result) {
+            if (err) {
+                console.error(err); // Log error for better debugging
+
+                res.status(500).send("Error adding the music");
+            } else {
+                console.log("Insert IDtje:", result.insertId)
+                res.send("Music succesvol toegevoegd!")
+            }
         });
     });
 
