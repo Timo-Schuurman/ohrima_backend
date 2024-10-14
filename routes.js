@@ -40,21 +40,23 @@ module.exports = function (app) {
         });
     });
 
-    // Update an existing tour (UPDATE)
     app.put("/tours/:id", function (req, res) {
-        let { event_name, event_date, location, ticket } = req.body;
+        let obj1 = req.body[0];
+        let arr1 = Object.keys(obj1).map((key) => obj1[key]); // Reuse the same mapping approach for consistency
+    
         let sql = "UPDATE tours SET event_name = ?, event_date = ?, location = ?, ticket = ? WHERE id = ?";
-        conn.query(sql, [event_name, event_date, location, ticket, req.params.id], function (err, result) {
+        conn.query(sql, [...arr1, req.params.id], function (err, result) {
             if (err) {
-                res.status(500).send("Error updating data");
+                console.error("Database error:", err); // Log error for better debugging
+                res.status(500).send("Error updating the tour");
             } else if (result.affectedRows === 0) {
                 res.status(404).send("Tour not found");
             } else {
-                res.send({ id: req.params.id, ...req.body });
+                console.log("Updated ID:", req.params.id);
+                res.send({ id: req.params.id, ...req.body[0] }); // Respond with the updated resource
             }
         });
     });
-
     // Delete a tour (DELETE)
     app.delete("/tours/:id", function (req, res) {
         let sql = "DELETE FROM tours WHERE id = ?";
@@ -98,6 +100,24 @@ module.exports = function (app) {
             } else {
                 console.log("Insert IDtje:", result.insertId)
                 res.send("Music succesvol toegevoegd!")
+            }
+        });
+    });
+
+    app.put("/music/:id", function (req, res) {
+        let obj1 = req.body[0];
+        let arr1 = Object.keys(obj1).map((key) => obj1[key]); // Reuse the same mapping approach for consistency
+    
+        let sql = "UPDATE tours SET name = ?, music_path = ? WHERE id = ?";
+        conn.query(sql, [...arr1, req.params.id], function (err, result) {
+            if (err) {
+                console.error("Database error:", err); // Log error for better debugging
+                res.status(500).send("Error updating the tour");
+            } else if (result.affectedRows === 0) {
+                res.status(404).send("Tour not found");
+            } else {
+                console.log("Updated ID:", req.params.id);
+                res.send({ id: req.params.id, ...req.body[0] }); // Respond with the updated resource
             }
         });
     });
