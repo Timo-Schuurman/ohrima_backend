@@ -1,8 +1,10 @@
+const express = require('express');
 const nodemailer = require('nodemailer');
 const conn = require('./conn'); 
 const router = express.Router();
 
-// Configure nodemailer transport for sending emails
+
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -11,16 +13,15 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Route to handle contact form submissions
+
 router.post('/sendEmail', (req, res) => {
     const { name, email, message } = req.body;
 
-    // Validate input
+
     if (!name || !email || !message) {
         return res.status(400).send('All fields are required');
     }
 
-    // Set up the email options
     const mailOptions = {
         from: email,
         to: process.env.BAND_EMAIL,
