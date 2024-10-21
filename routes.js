@@ -1,11 +1,21 @@
 const conn = require("./conn");
 const express = require('express');
+const { registerUser } = require("./userController");
+const { loginUser } = require("./login");
 
 module.exports = function (app) {
     // Middleware to parse JSON data
     app.use(express.json()); // For parsing application/json
     app.use(express.urlencoded({ extended: false })); // For parsing application/x-www-form-urlencoded
 
+
+    // Registration route
+    app.post('/register', registerUser); 
+
+    // Login route
+    app.post("/login", loginUser);
+    
+    
 
 // // TOURS // //
 
