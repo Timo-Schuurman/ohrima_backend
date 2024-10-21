@@ -9,6 +9,8 @@ module.exports = function (app) {
     app.use(express.urlencoded({ extended: false })); // For parsing application/x-www-form-urlencoded
 
 
+// // Login and register // //
+
     // Registration route
     app.post('/register', registerUser); 
 
@@ -24,6 +26,20 @@ module.exports = function (app) {
         let sql = "SELECT * FROM tours";
         conn.query(sql, function (err, rows) {
             if (err) {
+                res.status(500).send("Error retrieving data");
+            } else {
+                res.send(rows);
+            }
+        });
+    });
+
+    // 3 newest tours
+
+    app.get("/tours/new", function (req, res) {
+        let sql = "SELECT * FROM tours ORDER BY event_date DESC LIMIT 3";  
+        conn.query(sql, function (err, rows) {
+            if (err) {
+                console.error(err);  
                 res.status(500).send("Error retrieving data");
             } else {
                 res.send(rows);
