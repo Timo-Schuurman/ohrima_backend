@@ -1,53 +1,55 @@
+require('dotenv').config();
 const express = require('express');
 const nodemailer = require('nodemailer');
-const conn = require('./conn'); 
+const { google } = require('googleapis');
+
 const router = express.Router();
 
 
+const OAuth2 = google.auth.OAuth2;
+const oauth2Client = new OAuth2(
+    process.env.CLIENT_ID,
+    process.env.CLIENT_SECRET,
+    'https://developers.google.com/oauthplayground'
+);
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.BAND_EMAIL,
-        pass: process.env.BAND_EMAIL_PASS
-    }
+oauth2Client.setCredentials({
+    refresh_token: process.env.REFRESH_TOKEN
 });
 
+// POST endpoint to send email
+router.post('/sendEmail', async (req, res) => {
+    const { email, name, description } = req.body;
 
-router.post('/sendEmail', (req, res) => {
-    const { name, email, message } = req.body;
+    try {
+        const accessToken = await oauth2Client.getAccessToken();
 
-
-    if (!name || !email || !message) {
-        return res.status(400).send('All fields are required');
-    }
-
-    const mailOptions = {
-        from: email,
-        to: process.env.BAND_EMAIL,
-        subject: `New contact form submission from ${name}`,
-        text: message
-    };
-
-    // Send the email
-    transporter.sendMail(mailOptions, (err, info) => {
-        if (err) {
-            console.error('Error sending email:', err);
-            return res.status(500).send('Error sending email');
-        }
-
-        // Save the email data to the database
-        const sql = 'INSERT INTO contact_emails (name, email, message) VALUES (?, ?, ?)';
-        conn.query(sql, [name, email, message], (dbErr) => {
-            if (dbErr) {
-                console.error('Database error:', dbErr);
-                return res.status(500).send('Error saving email data');
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                type: 'OAuth2',
+                user: process.env.EMAIL,
+                clientId: process.env.CLIENT_ID,
+                clientSecret: process.env.CLIENT_SECRET,
+                refreshToken: process.env.REFRESH_TOKEN,
+                accessToken: accessToken.token
             }
-
-            res.status(200).send('Email sent and saved successfully');
         });
-    });
+
+        const mailOptions = {
+            from: `"${name}" <${process.env.EMAIL}>`,
+            to: process.env.BAND_EMAIL,
+            subject: 'Contact from Ohrima website',
+            text: `You have received a new message from ${name} (${email}):\n\n${description}`,
+            replyTo: email
+        };        
+
+        const info = await transporter.sendMail(mailOptions);
+        res.status(200).send({ message: 'Email sent successfully!', info });
+    } catch (error) {
+        console.error('Error sending email:', error);
+        res.status(500).send({ message: 'Failed to send email', error });
+    }
 });
 
 module.exports = router;
-
