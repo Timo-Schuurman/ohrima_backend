@@ -12,7 +12,7 @@ module.exports = function (app) {
 // // Login and register // //
 
     // Registration route
-    app.post('/register', registerUser); 
+    app.post('/signup', registerUser); 
 
     // Login route
     app.post("/login", loginUser);
