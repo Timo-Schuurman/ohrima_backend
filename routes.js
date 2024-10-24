@@ -1,27 +1,19 @@
-const conn = require("./conn");
 const express = require('express');
 const { registerUser } = require("./userController");
 const { loginUser } = require("./login");
+const { protect, admin } = require('./authMiddleware'); 
+const conn = require("./conn");
 
 module.exports = function (app) {
     // Middleware to parse JSON data
-    app.use(express.json()); // For parsing application/json
-    app.use(express.urlencoded({ extended: false })); // For parsing application/x-www-form-urlencoded
+    app.use(express.json()); 
+    app.use(express.urlencoded({ extended: false }));
 
-
-// // Login and register // //
-
-    // Registration route
+    // // Login and register // //
     app.post('/signup', registerUser); 
-
-    // Login route
     app.post("/login", loginUser);
-    
-    
 
-// // TOURS // //
-
-    // Get all tours
+    // // TOURS // //
     app.get("/tours", function (req, res) {
         let sql = "SELECT * FROM tours";
         conn.query(sql, function (err, rows) {
@@ -33,10 +25,8 @@ module.exports = function (app) {
         });
     });
 
-    // 3 newest tours
-
     app.get("/tours/new", function (req, res) {
-        let sql = "SELECT * FROM tours ORDER BY event_date DESC LIMIT 3";  
+        let sql = "SELECT * FROM tours ORDER BY event_date DESC LIMIT 3";
         conn.query(sql, function (err, rows) {
             if (err) {
                 console.error(err);  
@@ -47,44 +37,51 @@ module.exports = function (app) {
         });
     });
 
-    // Create a new tour (INSERT)
-    app.post("/tours", function (req, res) {
-        console.log("req.bodytje:", req.body); // Log the received request body
-        let obj1 = req.body[0]
-        var arr1 = Object.keys(obj1).map((key) => [obj1[key]]);
-        console.log("arr1=", arr1)
-        let sql = `INSERT INTO tours (event_name, event_date, location, ticket) VALUES (?, ?, ?, ?)`;
-        conn.query(sql, arr1, function (err, result) {
+    // // MUSIC // //
+    app.get("/music", function (req, res) {
+        let sql = "SELECT * FROM music";
+        conn.query(sql, function (err, rows) {
             if (err) {
-                console.error(err); // Log error for better debugging
-
-                res.status(500).send("Error adding the tour");
+                res.status(500).send("Error retrieving data");
             } else {
-                console.log("Insert IDtje:", result.insertId)
-                res.send("Tour succesvol toegevoegd!")
+                res.send(rows);
             }
         });
     });
 
-    app.put("/tours/:id", function (req, res) {
+    // // ADMIN ONLY ENDPOINTS // //
+    app.post("/tours", protect, admin, function (req, res) {
         let obj1 = req.body[0];
-        let arr1 = Object.keys(obj1).map((key) => obj1[key]); // Reuse the same mapping approach for consistency
-    
+        let arr1 = Object.keys(obj1).map((key) => [obj1[key]]);
+        let sql = `INSERT INTO tours (event_name, event_date, location, ticket) VALUES (?, ?, ?, ?)`;
+        conn.query(sql, arr1, function (err, result) {
+            if (err) {
+                console.error(err);
+                res.status(500).send("Error adding the tour");
+            } else {
+                res.send("Tour successfully added!");
+            }
+        });
+    });
+
+    app.put("/tours/:id", protect, admin, function (req, res) {
+        let obj1 = req.body[0];
+        let arr1 = Object.keys(obj1).map((key) => obj1[key]);
+
         let sql = "UPDATE tours SET event_name = ?, event_date = ?, location = ?, ticket = ? WHERE id = ?";
         conn.query(sql, [...arr1, req.params.id], function (err, result) {
             if (err) {
-                console.error("Database error:", err); // Log error for better debugging
+                console.error("Database error:", err);
                 res.status(500).send("Error updating the tour");
             } else if (result.affectedRows === 0) {
                 res.status(404).send("Tour not found");
             } else {
-                console.log("Updated ID:", req.params.id);
-                res.send({ id: req.params.id, ...req.body[0] }); // Respond with the updated resource
+                res.send({ id: req.params.id, ...req.body[0] });
             }
         });
     });
-    // Delete a tour (DELETE)
-    app.delete("/tours/:id", function (req, res) {
+
+    app.delete("/tours/:id", protect, admin, function (req, res) {
         let sql = "DELETE FROM tours WHERE id = ?";
         conn.query(sql, [req.params.id], function (err, result) {
             if (err) {
@@ -97,68 +94,48 @@ module.exports = function (app) {
         });
     });
 
-// // MUSIC // //
-
-    // Get all music entries
-    app.get("/music", function (req, res) {
-        let sql = "SELECT * FROM music";
-        conn.query(sql, function (err, rows) {
-        if (err) {
-            res.status(500).send("Error retrieving data");
-        } else {
-            res.send(rows);
-        }
-        });
-    });
-
-    // Create a new music (INSERT)
-    app.post("/music", function (req, res) {
-        console.log("req.bodytje:", req.body); // Log the received request body
-        let obj1 = req.body[0]
-        var arr1 = Object.keys(obj1).map((key) => [obj1[key]]);
-        console.log("arr1=", arr1)
-        let sql = `INSERT INTO tours (name, music_path) VALUES (?, ?, ?, ?)`;
+    // MUSIC ADMIN ENDPOINTS
+    app.post("/music", protect, admin, function (req, res) {
+        let obj1 = req.body[0];
+        let arr1 = Object.keys(obj1).map((key) => [obj1[key]]);
+        let sql = `INSERT INTO music (name, music_path) VALUES (?, ?)`;
         conn.query(sql, arr1, function (err, result) {
             if (err) {
-                console.error(err); // Log error for better debugging
-
+                console.error(err);
                 res.status(500).send("Error adding the music");
             } else {
-                console.log("Insert IDtje:", result.insertId)
-                res.send("Music succesvol toegevoegd!")
+                res.send("Music successfully added!");
             }
         });
     });
 
-    app.put("/music/:id", function (req, res) {
+    app.put("/music/:id", protect, admin, function (req, res) {
         let obj1 = req.body[0];
-        let arr1 = Object.keys(obj1).map((key) => obj1[key]); // Reuse the same mapping approach for consistency
-    
-        let sql = "UPDATE tours SET name = ?, music_path = ? WHERE id = ?";
+        let arr1 = Object.keys(obj1).map((key) => obj1[key]);
+
+        let sql = "UPDATE music SET name = ?, music_path = ? WHERE id = ?";
         conn.query(sql, [...arr1, req.params.id], function (err, result) {
             if (err) {
-                console.error("Database error:", err); // Log error for better debugging
-                res.status(500).send("Error updating the tour");
+                console.error("Database error:", err);
+                res.status(500).send("Error updating the music");
             } else if (result.affectedRows === 0) {
-                res.status(404).send("Tour not found");
+                res.status(404).send("Music entry not found");
             } else {
-                console.log("Updated ID:", req.params.id);
-                res.send({ id: req.params.id, ...req.body[0] }); // Respond with the updated resource
+                res.send({ id: req.params.id, ...req.body[0] });
             }
         });
     });
 
-    // Delete a music entry (DELETE)
-    app.delete("/music/:id", function (req, res) {
+    app.delete("/music/:id", protect, admin, function (req, res) {
         let sql = "DELETE FROM music WHERE id = ?";
         conn.query(sql, [req.params.id], function (err, result) {
-        if (err) {
-            res.status(500).send("Error deleting data");
-        } else if (result.affectedRows === 0) {
-            res.status(404).send("Music entry not found");
-        } else {
-            res.send({ message: "Music entry deleted successfully" });
-        }
+            if (err) {
+                res.status(500).send("Error deleting data");
+            } else if (result.affectedRows === 0) {
+                res.status(404).send("Music entry not found");
+            } else {
+                res.send({ message: "Music entry deleted successfully" });
+            }
         });
     });
 };
