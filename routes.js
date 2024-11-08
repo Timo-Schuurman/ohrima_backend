@@ -1,13 +1,9 @@
-require('dotenv').config();
-
 const express = require('express');
 const { registerUser } = require("./userController");
 const { loginUser } = require("./login");
 const { protect, admin } = require('./authMiddleware'); 
 const stripe = require('stripe')('sk_test_51QHn8wF7fFwtZT0kGPHJsfasuodOZccKeXgwa0ZDGTD4KQ2hfhrFCBM54NwTOpMIa9KOJ1OiYb2VLZ3XPIFTXGkI00aiB4X15E');
 const conn = require("./conn");
-const app = express();
-const emailRouter = require('./emailContact');
 
 module.exports = function (app) {
     // Middleware to parse JSON data
@@ -28,16 +24,6 @@ module.exports = function (app) {
         res.status(500).json({ error: error.message });
         }
     });
-
-    // EMAIL KRIJGEN VAN CONTACTFORMULIER//
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: false }));
-    app.use('/email', emailRouter); 
-
-    app.get('/', (req, res) => {
-        res.send('Hello World!');
-    });
-
 
     // // TOURS // //
     app.get("/tours", function (req, res) {
