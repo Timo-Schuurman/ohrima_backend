@@ -1,8 +1,11 @@
 const express = require('express');
+
 const { registerUser } = require("./userController");
 const { loginUser } = require("./login");
 const { protect, admin } = require('./authMiddleware'); 
-const stripe = require('stripe')('sk_test_51QHn8wF7fFwtZT0kGPHJsfasuodOZccKeXgwa0ZDGTD4KQ2hfhrFCBM54NwTOpMIa9KOJ1OiYb2VLZ3XPIFTXGkI00aiB4X15E');
+const { merch } = require('./controllers/merchController');
+
+
 const conn = require("./conn");
 
 module.exports = function (app) {
@@ -14,16 +17,8 @@ module.exports = function (app) {
     app.post('/signup', registerUser); 
     app.post("/login", loginUser);
 
-    // Route to list all products
-    app.get('/products', async (req, res) => {
-        try {
-        const products = await stripe.products.list();
-        res.json(products.data);
-        } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: error.message });
-        }
-    });
+    // Route to Merch
+    app.use('/merch', merch);
 
     // // TOURS // //
     app.get("/tours", function (req, res) {
