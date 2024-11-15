@@ -5,6 +5,9 @@ let connection = mysql.createConnection({
   user: "root",
   password: "",
   database: "ohrima",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 connection.connect(function (err) {
@@ -12,4 +15,4 @@ connection.connect(function (err) {
   console.log("Database connected!");
 });
 
-module.exports = connection;
+module.exports = connection.promise();

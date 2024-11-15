@@ -1,14 +1,17 @@
 require('dotenv').config();
-
 const express = require('express');
 const app = express();
 const emailRouter = require('./emailContact');
 const PORT = process.env.PORT || 3001;
 const cors = require('cors');
-
+const addressRoutes = require('./routes/address');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Register the address route
+app.use('/api/user', addressRoutes);
+
 app.use('/email', emailRouter); 
 
 const corsOptions = {
