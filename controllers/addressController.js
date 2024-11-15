@@ -27,7 +27,6 @@ exports.updateAddress = async (req, res) => {
 
     res.status(200).json({ message: 'Address updated successfully' });
   } catch (err) {
-    console.error('Error updating address:', err); // Detailed error log
     res.status(500).json({ error: 'Server error, please try again' });
   }
 };
