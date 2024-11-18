@@ -1,0 +1,34 @@
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe('ypk_test_51QHn8wF7fFwtZT0kPvKNPsr9mxSnj9XrSlrb6Eia3TVYdj5ZYQuNTJ0MTV9PCIfmvwP4shaCZXK1pFkOVNTO2nKP00LW8W1wif'); // Replace with your actual publishable key
+
+  async function checkout() {
+    try {
+      // Call your backend to create a checkout session
+      const response = await fetch('http://localhost:3001/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          products: [
+            { priceId: 'price_1QI7NlF7fFwtZT0kuswIdRMH', quantity: 1 }, // Replace with real price IDs
+          ],
+        }),
+      });
+
+      const { sessionId } = await response.json();
+
+      // Redirect to Stripe Checkout
+      const result = await stripe.redirectToCheckout({ sessionId });
+
+      if (result.error) {
+        alert(result.error.message); // Handle errors during redirect
+      }
+    } catch (error) {
+      console.error('Error during checkout:', error);
+    }
+  }
+</script>
+
+<button onclick="checkout()">Pay Now</button>

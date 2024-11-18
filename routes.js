@@ -1,13 +1,12 @@
 const express = require('express');
+const conn = require("./conn");
 
 const { registerUser } = require("./userController");
 const { loginUser } = require("./login");
 const { protect, admin } = require('./authMiddleware'); 
-const { merch } = require('./controllers/merchController');
-
-
-const conn = require("./conn");
-
+const MerchController = require('./controllers/merchController');
+const { getAllProducts, createProduct, updateProduct, deleteProduct, getProductById, } = require('./controllers/productController');
+  
 module.exports = function (app) {
     // Middleware to parse JSON data
     app.use(express.json()); 
@@ -18,7 +17,19 @@ module.exports = function (app) {
     app.post("/login", loginUser);
 
     // Route to Merch
-    app.use('/merch', merch);
+    app.post('/checkout', MerchController.createCheckoutSession);
+
+    // Route for products
+
+    app.get('/products', getAllProducts);
+
+    app.get('/products/:productId', getProductById);
+
+    app.post('/products', createProduct);
+
+    app.put('/products/:productId', updateProduct);
+
+    app.delete('/products/:productId', deleteProduct);
 
     // // TOURS // //
     app.get("/tours", function (req, res) {
@@ -56,7 +67,7 @@ module.exports = function (app) {
         });
     });
 
-    // // ADMIN ONLY ENDPOINTS // //
+    // // TOURS ADMIN ENDPOINTS // //
     app.post("/tours", protect, admin, function (req, res) {
         let obj1 = req.body[0];
         let arr1 = Object.keys(obj1).map((key) => [obj1[key]]);

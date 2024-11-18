@@ -1,63 +1,90 @@
-const express = require('express');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const router = express.Router();
+const stripe = require('stripe')('your_stripe_secret_key');
 
-// Mocked product data; replace with a call to Stripe if using Stripe products
-const products = [
-  { id: "prod_1", name: "Merch Product 1", price: 2000, currency: "usd" },
-  { id: "prod_2", name: "Merch Product 2", price: 3000, currency: "usd" },
-];
+class MerchController {
+  // Create a new checkout session
+  static async createCheckoutSession(req, res) {
+    try {
+      const { products } = req.body; // Array of { priceId, quantity }
+      const line_items = products.map(product => ({
+        price: product.priceId,
+        quantity: product.quantity,
+      }));
 
-// List all merchandise products
-router.get('/', (req, res) => {
-  res.json(products);
-});
+      const session = await stripe.checkout.sessions.create({
+        line_items,
+        mode: 'payment',
+        success_url: `${process.env.YOUR_DOMAIN}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.YOUR_DOMAIN}/cancel.html`,
+      });
 
-// Add to cart (simplified; could use session or a database)
-router.post('/cart', (req, res) => {
-  const { productId } = req.body;
-  const product = products.find(p => p.id === productId);
-  if (!product) return res.status(404).json({ error: 'Product not found' });
-
-  req.session.cart = req.session.cart || [];
-  req.session.cart.push(product);
-  res.json({ cart: req.session.cart });
-});
-
-// View cart
-router.get('/cart', (req, res) => {
-  res.json(req.session.cart || []);
-});
-
-// Checkout with Stripe
-router.post('/checkout', async (req, res) => {
-  try {
-    const cart = req.session.cart || [];
-
-    const lineItems = cart.map(item => ({
-      price_data: {
-        currency: item.currency,
-        product_data: {
-          name: item.name,
-        },
-        unit_amount: item.price,
-      },
-      quantity: 1,
-    }));
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: lineItems,
-      mode: 'payment',
-      success_url: `${req.headers.origin}/success`,
-      cancel_url: `${req.headers.origin}/cancel`,
-    });
-
-    res.json({ id: session.id });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+      res.send({ sessionId: session.id });
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      res.status(500).send({ error: 'Failed to create checkout session' });
+    }
   }
-});
 
-module.exports = { merch: router };
+  // Retrieve the status of a checkout session
+  static async sessionStatus(req, res) {
+    try {
+      const { session_id } = req.query;
+      const session = await stripe.checkout.sessions.retrieve(session_id);
+
+      res.send({
+        status: session.payment_status,
+        customer_email: session.customer_details.email,
+      });
+    } catch (error) {
+      console.error('Error retrieving session status:', error);
+      res.status(500).send({ error: 'Failed to retrieve session status' });
+    }
+  }
+}
+
+module.exports = MerchController;
+
+// // controllers/MerchController.js
+// const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+
+// class MerchController {
+//   // Create a new checkout session
+//   static async createCheckoutSession(req, res) {
+//     try {
+//       const { products } = req.body; // Expecting an array of { priceId, quantity }
+
+//       const line_items = products.map(product => ({
+//         price: product.priceId,
+//         quantity: product.quantity,
+//       }));
+
+//       const session = await stripe.checkout.sessions.create({
+//         line_items,
+//         mode: 'payment',
+//         success_url: `${process.env.YOUR_DOMAIN}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+//         cancel_url: `${process.env.YOUR_DOMAIN}/cancel.html`,
+//       });
+
+//       res.send({ sessionId: session.id });
+//     } catch (error) {
+//       console.error('Error creating checkout session:', error);
+//       res.status(500).send({ error: 'Failed to create checkout session' });
+//     }
+//   }
+
+//   // Retrieve the status of a checkout session
+//   static async sessionStatus(req, res) {
+//     try {
+//       const session = await stripe.checkout.sessions.retrieve(req.query.session_id);
+
+//       res.send({
+//         status: session.status,
+//         customer_email: session.customer_details.email,
+//       });
+//     } catch (error) {
+//       console.error('Error retrieving session status:', error);
+//       res.status(500).send({ error: 'Failed to retrieve session status' });
+//     }
+//   }
+// }
+
+// module.exports = MerchController;
