@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const connection = require("./conn");
+const connection = require("../conn");
 
 // Middleware to protect routes and check for admin access
 const protect = (req, res, next) => {

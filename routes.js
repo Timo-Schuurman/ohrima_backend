@@ -3,7 +3,7 @@ const conn = require("./conn");
 
 const { registerUser } = require("./userController");
 const { loginUser } = require("./login");
-const { protect, admin } = require('./authMiddleware'); 
+const { protect, admin } = require('./middlewares/authMiddleware'); 
 const MerchController = require('./controllers/merchController');
 const { getAllProducts, createProduct, updateProduct, deleteProduct, getProductById, } = require('./controllers/productController');
   

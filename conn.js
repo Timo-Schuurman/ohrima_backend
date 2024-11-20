@@ -15,4 +15,4 @@ connection.connect(function (err) {
   console.log("Database connected!");
 });
 
-module.exports = connection.promise();
+module.exports = connection;
