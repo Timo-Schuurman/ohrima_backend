@@ -18,37 +18,51 @@ oauth2Client.setCredentials({
 
 // POST endpoint to send email
 router.post('/sendEmail', async (req, res) => {
+    
     const { email, name, description } = req.body;
 
     try {
+  
         const accessToken = await oauth2Client.getAccessToken();
+        console.log('Access Token:', accessToken.token);
 
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,  
+            secure: true,
             auth: {
-                type: 'OAuth2',
                 user: process.env.EMAIL,
-                clientId: process.env.CLIENT_ID,
-                clientSecret: process.env.CLIENT_SECRET,
-                refreshToken: process.env.REFRESH_TOKEN,
-                accessToken: accessToken.token
-            }
+                pass: process.env.PASSWORD, 
+              }
         });
+        
+        console.error(transporter);
 
         const mailOptions = {
-            from: `"${name}" <${process.env.EMAIL}>`,
+            from: `"${name}" <${email}>`,
             to: process.env.BAND_EMAIL,
             subject: 'Contact from Ohrima website',
             text: `You have received a new message from ${name} (${email}):\n\n${description}`,
             replyTo: email
-        };        
+        };    
 
-        const info = await transporter.sendMail(mailOptions);
-        res.status(200).send({ message: 'Email sent successfully!', info });
-    } catch (error) {
-        console.error('Error sending email:', error);
-        res.status(500).send({ message: 'Failed to send email', error });
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error sending email:', error);
+                res.status(500).send({ message: 'Failed to send email', error });
+
+            } else {
+                console.log('Email sent:', info);
+                res.status(200).send({ message: 'Email sent successfully!', info });
+            }
+        });
+
+     } catch (error) {
+         console.error('Error sending email:', error);
+         res.status(500).send({ message: 'Failed to send email', error });
     }
 });
+
+
 
 module.exports = router;

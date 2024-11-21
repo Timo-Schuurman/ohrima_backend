@@ -5,7 +5,18 @@ const emailRouter = require('./emailContact');
 const PORT = process.env.PORT || 3001;
 const cors = require('cors');
 const addressRoutes = require('./routes/address');
+
 const checkApiKey = require('./middlewares/checkApiKey'); 
+
+console.log(PORT);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// Register the address route
+app.use('/api/user', addressRoutes);
+
+app.use('/email', emailRouter); 
 
 const corsOptions = {
     origin: 'http://localhost:3000',//(https://your-client-app.com)
