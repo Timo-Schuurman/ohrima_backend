@@ -27,6 +27,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use(cors(corsOptions));
+
 app.use('/', checkApiKey);
 
 app.get('/', (req, res) => {
