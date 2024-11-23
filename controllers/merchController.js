@@ -1,4 +1,4 @@
-const stripe = require('stripe')('your_stripe_secret_key');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 class MerchController {
   // Create a new checkout session
